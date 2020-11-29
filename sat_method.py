@@ -4,6 +4,7 @@ global unique_number
 unique_number = 1
 
 def initiate_x(comparaison_list, J, H, N):
+    global unique_number
     result_dict = dict()
     for i in range(N):
         Xi = [comparaison_list[el][0][i] for el in range(J)] + [comparaison_list[el][1][i] for el in range(J)]
@@ -14,6 +15,7 @@ def initiate_x(comparaison_list, J, H, N):
     return result_dict
 
 def initiate_y(comparaison_list, J, H, N):
+    global unique_number
     result_dict = dict()
     sous_parties = []
     for taille in range(N+1):
@@ -24,5 +26,43 @@ def initiate_y(comparaison_list, J, H, N):
             result_dict[partie_a, partie_b] = unique_number
             unique_number += 1
     return result_dict
+    
+def initiate_z(comparaison_list, J, H, N):
+    global unique_number
+    result_dict = dict()
+    for j in range(J):
+        for h in range(H):
+            result_dict[(j, h)] = unique_number
+            unique_number += 1
+    return result_dict
+    
+def initiate_z_prime(comparaison_list, J, H, N):
+    global unique_number
+    result_dict = dict()
+    for j in range(J):
+        for h in range(H):
+            result_dict[(j, h)] = unique_number
+            unique_number += 1
+    return result_dict
+    
+def initiate_d(comparaison_list, J, H, N):
+    global unique_number
+    result_dict = dict()
+    for h in range(H):
+        for l in range(H):
+            result_dict[(h, l)] = unique_number
+            unique_number += 1
+    return result_dict
+
+
+def initiate_s(comparaison_list, J, H, N):
+    global unique_number
+    result_dict = dict()
+    for j in range(J):
+        for h in range(H):
+            result_dict[(j, h)] = unique_number
+            unique_number += 1
+    return result_dict
+
             
 
