@@ -71,8 +71,8 @@ def clause_1(X, J, H, N):
         for h in range(H):
             for k in Xi:
                 for k_prime in Xi:
-                    if k < k_prime:
-                        clause.append([X[(i, h, k)], -X[(i, h, k_prime)]])
+                    if k > k_prime:
+                        clause.append([-X[(i, h, k_prime)], X[(i, h, k)]])
     return clause
     
 def clause_2a(D, J, H, N):
@@ -100,20 +100,20 @@ def clause_2b(X, D, J, H, N):
                         clause.append([X[(i, h_prime, k)], -X[(i, h, k)], -D[(h, h_prime)]])
     return clause
 
-def clause_3a(Y, comparaison_list, J, H, N ):
+def clause_3a(Y, J, H, N ):
     clause = []
     for a,b in Y.keys():
         clause.append([Y[(a,b)], Y[(b,a)]])
     return clause
 
-def clause_3b(Y, comparaison_list, J, H, N):
+def clause_3b(Y, J, H, N):
     clause = []
     for a, b in Y.keys():
         if set(a).issubset(set(b)):
-            clause.append([Y[(b, b)]])
+            clause.append([Y[(b, a)]])
     return clause
 
-def clause_3c(Y, comparaison_list, J, H, N):
+def clause_3c(Y, J, H, N):
     clause = []
     sous_parties = []
     for taille in range(N + 1):
@@ -138,7 +138,7 @@ def clause_4a(Y, X, Z, J, H, N, comparaison_list):
                     if i in partie_b:
                         clause_parts.append(-X[(i, h, comparaison_list[j][1][i])])
                 clause_parts.append(Y[(partie_a, partie_b)])
-                clause_parts.append(-Z[(j, h)]
+                clause_parts.append(-Z[(j, h)])
                 clause.append(clause_parts)
     return clause
     
@@ -154,7 +154,7 @@ def clause_4b(Y, X, Z_prime, J, H, N, comparaison_list):
                     if i in partie_b:
                         clause_parts.append(-X[(i, h, comparaison_list[j][0][i])])
                 clause_parts.append(Y[(partie_a, partie_b)])
-                clause_parts.append(-Z_prime[(j, h)]
+                clause_parts.append(-Z_prime[(j, h)])
                 clause.append(clause_parts)
     return clause
     
@@ -174,7 +174,7 @@ def clause_4c(Y, X, Z_prime, J, H, N, comparaison_list):
                     else:
                         clause_parts.append(X[(i, h, comparaison_list[j][0][i])])
                 clause_parts.append(-Y[(partie_b, partie_a)])
-                clause_parts.append(Z_prime[(j, h)]
+                clause_parts.append(Z_prime[(j, h)])
                 clause.append(clause_parts)
     return clause
 
@@ -209,6 +209,8 @@ def clause_6( S,comparaison_list, J, H, N):
     for j in range(J):
         clauses.append([ S[j, h] for h in range(H)])
     return clauses
+    
+
     
 
 
