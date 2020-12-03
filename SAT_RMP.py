@@ -1,7 +1,8 @@
 import os, sys
 from itertools import combinations
 from bidict import bidict
-from random import randint
+import random
+
 
 class RMP:
     
@@ -10,6 +11,7 @@ class RMP:
             reference_points : liste de dictionnaires (key : critère, valeur : evaluation du critère)
             hypothèse : les evaluations des critère sont numériques
             criteria : listes des critères
+            coalition_importance : ?
         """
         self.reference_points = reference_points
         self.criteria = list(range(len(reference_points[0])))
@@ -36,7 +38,7 @@ class RMP:
         """
         result = []
         for criterion in criteria:
-            if Rmp.is_greater_criterion(a[criterion], reference_point[criterion]):
+            if RMP.is_greater_criterion(a[criterion], reference_point[criterion]):
                 result.append(criterion)
         return tuple(sorted(result))
     
@@ -45,12 +47,12 @@ class RMP:
             returns a tuple ( is_preferred(object_1, object_2), is_indifferent(object_1, object_2))
         """
         for reference_point in self.reference_points:
-            coalition_1 =  Rmp.dominant_criteria_set(object_1, reference_point, self.criteria)
-            coalition_2 =  Rmp.dominant_criteria_set(object_2, reference_point, self.criteria)
-            if not Rmp.is_more_important_coalition(coalition_2, coalition_1):
+            coalition_1 =  RMP.dominant_criteria_set(object_1, reference_point, self.criteria)
+            coalition_2 =  RMP.dominant_criteria_set(object_2, reference_point, self.criteria)
+            if not RMP.is_more_important_coalition(coalition_2, coalition_1):
                 # 1 > 2
                 return True, False
-            elif not Rmp.is_more_important_coalition(coalition_1, coalition_2):
+            elif not RMP.is_more_important_coalition(coalition_1, coalition_2):
                 # 1 < 2
                 return False, False
         return False, True
@@ -62,7 +64,7 @@ class SatRmp:
     unique_number = 1
     instance_id = 1
     
-    def __init__(self, comparaison_list, J, H, N, SAT_solver_file, criteria_value_range):
+    def __init__(self, comparaison_list, J, H, N, SAT_solver_path):
         """
         
         """
@@ -73,8 +75,7 @@ class SatRmp:
         self.J = J
         self.H = H
         self.N = N
-        self.SAT_solver_file = SAT_solver_file
-        self.criteria_value_range = criteria_value_range
+        self.SAT_solver_path = SAT_solver_path
         
         self.X = None
         self.Y = None
@@ -100,7 +101,7 @@ class SatRmp:
     
     def initiate_x(self):
         result_dict = bidict()
-        for i in range(N):
+        for i in range(self.N):
             Xi = [self.comparaison_list[el][0][i] for el in range(self.J)] + [self.comparaison_list[el][1][i] for el in range(self.J)]
             for h in range(self.H):
                 for k in Xi:
@@ -153,7 +154,7 @@ class SatRmp:
                 SatRmp.unique_number += 1
         return result_dict
 
-    def clause_1():
+    def clause_1(self):
         clause = []
         for i in range(self.N):
             Xi = [self.comparaison_list[el][0][i] for el in range(self.J)] + [self.comparaison_list[el][1][i] for el in range(self.J)]
@@ -164,14 +165,14 @@ class SatRmp:
                             clause.append([-self.X[(i, h, k_prime)], self.X[(i, h, k)]])
         return clause
 
-    def clause_2a():
+    def clause_2a(self):
         clause = []
         for h in range(self.H):
             for h_prime in range(h + 1, self.H):
                 clause.append([self.D[(h, h_prime)], self.D[(h_prime, h)]])
         return clause
 
-    def clause_2b():
+    def clause_2b(self):
         clause = []
         for i in range(self.N):
             Xi = [self.comparaison_list[el][0][i] for el in range(self.J)] + [self.comparaison_list[el][1][i] for el in range(self.J)]
@@ -182,20 +183,20 @@ class SatRmp:
                             clause.append([self.X[(i, h_prime, k)], -self.X[(i, h, k)], -self.D[(h, h_prime)]])
         return clause
 
-    def clause_3a():
+    def clause_3a(self):
         clause = []
         for partie_a, partie_b in self.Y:
             clause.append([self.Y[(partie_a, partie_b)], self.Y[(partie_b, partie_a)]])
         return clause
 
-    def clause_3b():
+    def clause_3b(self):
         clause = []
         for partie_a, partie_b in self.Y:
             if set(partie_a).issubset(set(partie_b)):
                 clause.append([self.Y[(partie_b, partie_a)]])
         return clause
 
-    def clause_3c():
+    def clause_3c(self):
         clause = []
         sous_parties = []
         for taille in range(self.N + 1):
@@ -208,7 +209,7 @@ class SatRmp:
                     clause.append([ -self.Y[(a, b)], -self.Y[(b, c)], self.Y[(a, c)]])
         return clause
 
-    def clause_4a():
+    def clause_4a(self):
         clause = []
         for partie_a, partie_b in self.Y:
             for j in range(self.J):
@@ -224,7 +225,7 @@ class SatRmp:
                     clause.append(clause_parts)
         return clause
 
-    def clause_4b():
+    def clause_4b(self):
         clause = []
         for partie_a, partie_b in self.Y:
             for j in range(self.J):
@@ -240,7 +241,7 @@ class SatRmp:
                     clause.append(clause_parts)
         return clause
 
-    def clause_4c():
+    def clause_4c(self):
         clause = []
         for partie_a, partie_b in self.Y:
             for j in range(self.J):
@@ -260,7 +261,7 @@ class SatRmp:
                     clause.append(clause_parts)
         return clause
 
-    def clause_5a():
+    def clause_5a(self):
         clauses = []
         for j in range(self.J):
             for h in range(self.H):
@@ -268,7 +269,7 @@ class SatRmp:
                     clauses.append([self.Z[j, h], -self.S[j, h_prime]])
         return clauses
 
-    def clause_5b():
+    def clause_5b(self):
         clauses = []
         for j in range(self.J):
             for h in range(self.H):
@@ -277,30 +278,24 @@ class SatRmp:
         return clauses
 
 
-    def clause_5c():
+    def clause_5c(self):
         clauses = []
         for j in range(self.J):
             for h in range(self.H):
                 clauses.append([ -self.Z_prime[j, h], -self.S[j, h]])
         return clauses
 
-    def clause_6():
-        clauses = []
-        for j in range(self.J):
-            clauses.append([self.S[j, h] for h in range(self.H)])
-        return clauses
-
     def initiate_clauses(self):
-        clauses =  self.clause_1 +  self.clause_2a +  self.clause_2b +  self.clause_3a +  self.clause_3b
-        clauses += self.clause_3c +  self.clause_4a +  self.clause_4b +  self.clause_4c +  self.clause_5a
-        clauses += self.clause_5b +  self.clause_5c +  self.clause_6
+        clauses =  self.clause_1() +  self.clause_2a() +  self.clause_2b() +  self.clause_3a() +  self.clause_3b()
+        clauses += self.clause_3c() +  self.clause_4a() +  self.clause_4b() +  self.clause_4c() +  self.clause_5a()
+        clauses += self.clause_5b() +  self.clause_5c()
         return clauses
     
     def run_SAT(self, result_file_path):
         clauses_file_path = 'SAT_RMP_clauses_{}.cnf'.format(self.id)
         # Creating clause file
         clauses_file = open(clauses_file_path, 'w+')
-        file.write("p cnf 108 1145 \n")
+        clauses_file.write("p cnf 108 1145 \n") ## insérer nombres de varibles et de clauses
         
         for clause in self.clauses:
             line = ''
@@ -312,7 +307,7 @@ class SatRmp:
         clauses_file.close()
         
         # Running SAT solver
-        os.system('python3 {} {} {}'.format(self.SAT_file, clauses_file_path, result_file_path))
+        os.system('python3 {} {} {}'.format(self.SAT_solver_path, clauses_file_path, result_file_path))
         
     def read_SAT_result_from_file(self, result_file_path):
         result_file = open(result_file_path, 'r')
@@ -326,35 +321,40 @@ class SatRmp:
     def create_RMP_model(self):
         assert len(self.SAT_result) == 0 or self.SAT_result[0] != 'UNSAT' , "Couldn't create RMP model"
         SAT_X, SAT_Y = dict(), dict()
+
+        # récupérer les x et les y donnés par le solveur SAT
         for variable in self.SAT_result:
             if abs(int(variable)) in self.X.inverse:
                 SAT_X[self.X.inverse[int(variable)]] = int(variable)
             if abs(int(variable)) in self.Y.inverse:
                 SAT_Y[self.Y.inverse[int(variable)]] = int(variable)
+
+        # contruire les profils de référence
         reference_points = []
-        for _ in range(self.H):
-            reference_point = []
-            for i in range(self.N):
-                min_value, max_value = self.criteria_value_range[0], self.criteria_value_range[1]
-                Xi = [self.comparaison_list[el][0][i] for el in range(self.J)] + [self.comparaison_list[el][1][i] for el in range(self.J)]
-                for h in range(self.H):
-                    for k in Xi:
-                        if SAT_X[i, h, k] > 0:
-                            max_value = min(max_value, k)
+
+        for i in range(self.N):
+            Xi = [self.comparaison_list[el][0][i] for el in range(self.J)] + [self.comparaison_list[el][1][i] for el in range(self.J)]
+            # on trie les K par ordre croissant :
+            Xi.sort()
+            for h in range(self.H):
+                reference_points[h] = dict()
+                min_value = 0
+                for k in Xi:
+                        if SAT_X[i, h, k] == 1:
+                            reference_points[h][i] = random.uniform(min_value, k)
+                            break
                         else:
-                            min_value = max(min_value, k)
-                if min_value + 1 > max_value:
-                    raise Exception("Couldn't create RMP model")
-                reference_point.append(randint(min_value + 1, max_value))
-            reference_points.append(reference_point)
+                            min_value = k
+                if reference_points[h][i] is None:
+                    reference_points[h][i] = random.uniform(Xi[len(Xi)], 1)
         self.RMP_model = RMP(reference_points, SAT_Y)
 
 
-def gerenate_random_RMP_learning_set(J, N, criteria_value_range):
+def generate_random_RMP_learning_set(J, N, criteria_value_range):
     result = []
     for _ in range(J):
-        p = [randint(criteria_value_range[0], criteria_value_range[1]) for i in range(N)]
-        n = [randint(criteria_value_range[0], criteria_value_range[1]) for i in range(N)]
+        p = [random.random() for i in range(N)]
+        n = [random.random() for i in range(N)]
         result.append((p,n))
     return result
     
