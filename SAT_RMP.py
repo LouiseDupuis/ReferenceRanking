@@ -11,7 +11,7 @@ class RMP:
             reference_points : liste de dictionnaires (key : critère, valeur : evaluation du critère)
             hypothèse : les evaluations des critère sont numériques
             criteria : listes des critères
-            coalition_importance : ?
+            coalition_importance : est un dictionnaire qui contient toutes le svaribales Y(a,b) pour toutes les coalitiosn a,b de critères
         """
         self.reference_points = reference_points
         self.criteria = list(range(len(reference_points[0])))
@@ -23,13 +23,12 @@ class RMP:
             fonction de comparaison de deux evaluations sur un point d'un meme critère
         """
         return value_1 >= value_2
-    
-    @staticmethod
-    def is_more_important_coalition(coalition_1, coalition_2):
+
+    def is_more_important_coalition(self, coalition_1, coalition_2):
         """
             fonction de comparaison de domination de deux ensembles de critères
         """
-        return coalition_importance[(coalition_1, coalition_2)] > 0
+        return self.coalition_importance[(coalition_1, coalition_2)] > 0
     
     @staticmethod
     def dominant_criteria_set(a, reference_point, criteria):
@@ -178,7 +177,7 @@ class SatRmp:
             Xi = [self.comparaison_list[el][0][i] for el in range(self.J)] + [self.comparaison_list[el][1][i] for el in range(self.J)]
             for k in Xi:
                 for h in range(self.H):
-                    for h_prime in range(h_prime):
+                    for h_prime in range(self.H):
                         if h != h_prime:
                             clause.append([self.X[(i, h_prime, k)], -self.X[(i, h, k)], -self.D[(h, h_prime)]])
         return clause
@@ -289,13 +288,18 @@ class SatRmp:
         clauses =  self.clause_1() +  self.clause_2a() +  self.clause_2b() +  self.clause_3a() +  self.clause_3b()
         clauses += self.clause_3c() +  self.clause_4a() +  self.clause_4b() +  self.clause_4c() +  self.clause_5a()
         clauses += self.clause_5b() +  self.clause_5c()
+        self.clauses = clauses
         return clauses
     
     def run_SAT(self, result_file_path):
+
         clauses_file_path = 'SAT_RMP_clauses_{}.cnf'.format(self.id)
         # Creating clause file
         clauses_file = open(clauses_file_path, 'w+')
-        clauses_file.write("p cnf 108 1145 \n") ## insérer nombres de varibles et de clauses
+
+        number_of_clauses = len(self.clauses)
+        number_of_variables = SatRmp.unique_number # would that work ?? unique_number - 1 ?
+        clauses_file.write("p cnf " + str(number_of_variables) + " " + str(number_of_clauses) +" \n") ## insérer nombres de varibles et de clauses
         
         for clause in self.clauses:
             line = ''
@@ -350,7 +354,7 @@ class SatRmp:
         self.RMP_model = RMP(reference_points, SAT_Y)
 
 
-def generate_random_RMP_learning_set(J, N, criteria_value_range):
+def generate_random_RMP_learning_set(J, N):
     result = []
     for _ in range(J):
         p = [random.random() for i in range(N)]
@@ -359,22 +363,22 @@ def generate_random_RMP_learning_set(J, N, criteria_value_range):
     return result
     
     
-if __name__ == __main__:
-    '''
+if __name__ == '__main__':
+    """
     J = 10
     N = 5
     H = 2
     SAT_solver_file = ''
     criteria_value_range = (1,100)
     result_file_path = 'SAT_output.cnf'
-    comparaison_list = gerenate_random_RMP_learning_set(J, N, criteria_value_range)
-    sat_rmp = SatRmp(comparaison_list, J, H, N, SAT_solver_file, criteria_value_range)
+    comparaison_list = generate_random_RMP_learning_set(J, N)
+    sat_rmp = SatRmp(comparaison_list, J, H, N, SAT_solver_file)
     sat_rmp.run_SAT(result_file_path)
-    sat_rmp.read_SAT_result_from_file(result_file_path)
+    #sat_rmp.read_SAT_result_from_file(result_file_path)
     try:
         sat_rmp.create_RMP_model()
     except AssertionError:
         print("Problem is not solvable (UNSAT)")
     except Exception:
-        print("Problem while creating RMP")
-    '''
+        print("Problem while creating RMP")"""
+
