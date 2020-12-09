@@ -2,13 +2,14 @@ import os, sys
 from itertools import combinations
 from bidict import bidict
 import random
+import pylgl
 
 
 class RMP:
     
     def __init__(self, reference_points, coalition_importance):
         """
-            reference_points : liste de dictionnaires (key : critère, valeur : evaluation du critère)
+            reference_points : liste de listes (indice : critère, valeur : evaluation du critère)
             hypothèse : les evaluations des critère sont numériques
             criteria : listes des critères
             coalition_importance : est un dictionnaire qui contient toutes le svaribales Y(a,b) pour toutes les coalitiosn a,b de critères
@@ -16,28 +17,21 @@ class RMP:
         self.reference_points = reference_points
         self.criteria = list(range(len(reference_points[0])))
         self.coalition_importance = coalition_importance
-        
-    @staticmethod
-    def is_greater_criterion(value_1, value_2):
-        """
-            fonction de comparaison de deux evaluations sur un point d'un meme critère
-        """
-        return value_1 >= value_2
 
     def is_more_important_coalition(self, coalition_1, coalition_2):
         """
             fonction de comparaison de domination de deux ensembles de critères
         """
+        print('coal_1', coalition_1, 'coal_2', coalition_2)
         return self.coalition_importance[(coalition_1, coalition_2)] > 0
     
-    @staticmethod
-    def dominant_criteria_set(a, reference_point, criteria):
+    def dominant_criteria_set(self, a, reference_point):
         """
             compute c(a,rh)={i∈N:ai ≥rih}
         """
         result = []
-        for criterion in criteria:
-            if RMP.is_greater_criterion(a[criterion], reference_point[criterion]):
+        for criterion in self.criteria:
+            if a[criterion] >= reference_point[criterion]:
                 result.append(criterion)
         return tuple(sorted(result))
     
@@ -46,27 +40,26 @@ class RMP:
             returns a tuple ( is_preferred(object_1, object_2), is_indifferent(object_1, object_2))
         """
         for reference_point in self.reference_points:
-            coalition_1 =  RMP.dominant_criteria_set(object_1, reference_point, self.criteria)
-            coalition_2 =  RMP.dominant_criteria_set(object_2, reference_point, self.criteria)
-            if not RMP.is_more_important_coalition(coalition_2, coalition_1):
+            print(reference_point)
+            coalition_1 =  self.dominant_criteria_set(object_1, reference_point)
+            coalition_2 =  self.dominant_criteria_set(object_2, reference_point)
+            if not self.is_more_important_coalition(coalition_2, coalition_1):
                 # 1 > 2
                 return True, False
-            elif not RMP.is_more_important_coalition(coalition_1, coalition_2):
+            elif not self.is_more_important_coalition(coalition_1, coalition_2):
                 # 1 < 2
                 return False, False
         return False, True
 
-
-
 class SatRmp:
     
-    unique_number = 1
     instance_id = 1
     
-    def __init__(self, comparaison_list, J, H, N, SAT_solver_path):
+    def __init__(self, comparaison_list, J, H, N):
         """
         
         """
+        self.unique_number = 1
         self.id = SatRmp.instance_id
         SatRmp.instance_id += 1
         
@@ -74,7 +67,6 @@ class SatRmp:
         self.J = J
         self.H = H
         self.N = N
-        self.SAT_solver_path = SAT_solver_path
         
         self.X = None
         self.Y = None
@@ -83,7 +75,7 @@ class SatRmp:
         self.D = None
         self.S = None
         self.clauses = None
-        self.SAT_result = []
+        self.SAT_result = None
         self.RMP_model = None
         self.reset()
         
@@ -104,8 +96,8 @@ class SatRmp:
             Xi = [self.comparaison_list[el][0][i] for el in range(self.J)] + [self.comparaison_list[el][1][i] for el in range(self.J)]
             for h in range(self.H):
                 for k in Xi:
-                    result_dict[(i, h, k)] = SatRmp.unique_number
-                    SatRmp.unique_number += 1
+                    result_dict[(i, h, k)] = self.unique_number
+                    self.unique_number += 1
         return result_dict
 
     def initiate_y(self):
@@ -116,32 +108,32 @@ class SatRmp:
             sous_parties += combi
         for partie_a in sous_parties:
             for partie_b in sous_parties:
-                result_dict[partie_a, partie_b] = SatRmp.unique_number
-                SatRmp.unique_number += 1
+                result_dict[partie_a, partie_b] = self.unique_number
+                self.unique_number += 1
         return result_dict
 
     def initiate_z(self):
         result_dict = bidict()
         for j in range(self.J):
             for h in range(self.H):
-                result_dict[(j, h)] = SatRmp.unique_number
-                SatRmp.unique_number += 1
+                result_dict[(j, h)] = self.unique_number
+                self.unique_number += 1
         return result_dict
 
     def initiate_z_prime(self):
         result_dict = bidict()
         for j in range(self.J):
             for h in range(self.H):
-                result_dict[(j, h)] = SatRmp.unique_number
-                SatRmp.unique_number += 1
+                result_dict[(j, h)] = self.unique_number
+                self.unique_number += 1
         return result_dict
 
     def initiate_d(self):
         result_dict = bidict()
         for h in range(self.H):
             for h_prime in range(self.H):
-                result_dict[(h, h_prime)] = SatRmp.unique_number
-                SatRmp.unique_number += 1
+                result_dict[(h, h_prime)] = self.unique_number
+                self.unique_number += 1
         return result_dict
 
 
@@ -149,8 +141,8 @@ class SatRmp:
         result_dict = bidict()
         for j in range(self.J):
             for h in range(self.H):
-                result_dict[(j, h)] = SatRmp.unique_number
-                SatRmp.unique_number += 1
+                result_dict[(j, h)] = self.unique_number
+                self.unique_number += 1
         return result_dict
 
     def clause_1(self):
@@ -284,76 +276,58 @@ class SatRmp:
                 clauses.append([ -self.Z_prime[j, h], -self.S[j, h]])
         return clauses
 
+    def clause_6(self):
+        clauses = []
+        for j in range(self.J):
+            clauses.append([ self.S[j, h] for h in range(self.H)])
+        return clauses
+
     def initiate_clauses(self):
         clauses =  self.clause_1() +  self.clause_2a() +  self.clause_2b() +  self.clause_3a() +  self.clause_3b()
         clauses += self.clause_3c() +  self.clause_4a() +  self.clause_4b() +  self.clause_4c() +  self.clause_5a()
-        clauses += self.clause_5b() +  self.clause_5c()
+        clauses += self.clause_5b() +  self.clause_5c() + self.clause_6()
         self.clauses = clauses
         return clauses
     
-    def run_SAT(self, result_file_path):
-
-        clauses_file_path = 'SAT_RMP_clauses_{}.cnf'.format(self.id)
-        # Creating clause file
-        clauses_file = open(clauses_file_path, 'w+')
-
-        number_of_clauses = len(self.clauses)
-        number_of_variables = SatRmp.unique_number # would that work ?? unique_number - 1 ?
-        clauses_file.write("p cnf " + str(number_of_variables) + " " + str(number_of_clauses) +" \n") ## insérer nombres de varibles et de clauses
-        
-        for clause in self.clauses:
-            line = ''
-            for variable in clause:
-                line += str(variable) + ' '
-            line += '0'
-            clauses_file.write(line + "\n")
-            
-        clauses_file.close()
-        
-        # Running SAT solver
-        os.system('python3 {} {} {}'.format(self.SAT_solver_path, clauses_file_path, result_file_path))
-        
-    def read_SAT_result_from_file(self, result_file_path):
-        result_file = open(result_file_path, 'r')
-        for index, line in enumerate(result_file):
-            if line.strip() == 'UNSAT':
-                self.SAT_result += 'UNSAT'
-                break
-            elif index > 0:
-                self.SAT_result += line.strip().split()[:-1]
+    def run_SAT(self):
+        self.SAT_result = pylgl.solve(self.clauses)
     
     def create_RMP_model(self):
-        assert len(self.SAT_result) == 0 or self.SAT_result[0] != 'UNSAT' , "Couldn't create RMP model"
+        assert self.SAT_result != 'UNSAT', "Couldn't create RMP model"
         SAT_X, SAT_Y = dict(), dict()
 
         # récupérer les x et les y donnés par le solveur SAT
         for variable in self.SAT_result:
             if abs(int(variable)) in self.X.inverse:
-                SAT_X[self.X.inverse[int(variable)]] = int(variable)
+                SAT_X[self.X.inverse[abs(int(variable))]] = int(variable)
             if abs(int(variable)) in self.Y.inverse:
-                SAT_Y[self.Y.inverse[int(variable)]] = int(variable)
+                SAT_Y[self.Y.inverse[abs(int(variable))]] = int(variable)
 
         # contruire les profils de référence
         reference_points = []
 
-        for i in range(self.N):
-            Xi = [self.comparaison_list[el][0][i] for el in range(self.J)] + [self.comparaison_list[el][1][i] for el in range(self.J)]
-            # on trie les K par ordre croissant :
-            Xi.sort()
-            for h in range(self.H):
-                reference_points[h] = dict()
-                min_value = 0
+        for h in range(self.H):
+            reference_point = []
+            for i in range(self.N):
+                min_value, max_value = 0, 1
+                Xi = [self.comparaison_list[el][0][i] for el in range(self.J)] + [self.comparaison_list[el][1][i] for el in range(self.J)]
+                # on trie les K par ordre croissant :
+                # Xi.sort() pas necessaire ?
                 for k in Xi:
-                        if SAT_X[i, h, k] == 1:
-                            reference_points[h][i] = random.uniform(min_value, k)
-                            break
-                        else:
-                            min_value = k
-                if reference_points[h][i] is None:
-                    reference_points[h][i] = random.uniform(Xi[len(Xi)], 1)
+                    if SAT_X[i, h, k] > 0:
+                        max_value = min(max_value, k)
+                    else:
+                        min_value = max(min_value, k)
+                if min_value >= max_value:
+                    raise Exception("Couldn't create RMP model")
+                criterion = random.uniform(min_value, max_value)
+                while not criterion > min_value:
+                    criterion = random.uniform(min_value, max_value)
+                reference_point.append(criterion)
+            reference_points.append(reference_point) 
+            
         self.RMP_model = RMP(reference_points, SAT_Y)
-
-
+    
 def generate_random_RMP_learning_set(J, N):
     result = []
     for _ in range(J):
@@ -361,6 +335,23 @@ def generate_random_RMP_learning_set(J, N):
         n = [random.random() for i in range(N)]
         result.append((p,n))
     return result
+
+def test_rmp(J, N, H):
+    comparaison_list = generate_random_RMP_learning_set(J, N)
+    sat_rmp = SatRmp(comparaison_list, J, H, N)
+    sat_rmp.run_SAT()
+    try:
+        sat_rmp.create_RMP_model()
+    except AssertionError:
+        print("Problem is not solvable (UNSAT)")
+        return False
+    except Exception:
+        print("Problem while creating RMP")
+        return False
+    for j in range(J):
+        if not sat_rmp.RMP_model.compare(comparaison_list[j][0], comparaison_list[j][1])[0]:
+            return False
+    return True
     
     
 if __name__ == '__main__':
@@ -368,17 +359,6 @@ if __name__ == '__main__':
     J = 10
     N = 5
     H = 2
-    SAT_solver_file = ''
-    criteria_value_range = (1,100)
-    result_file_path = 'SAT_output.cnf'
-    comparaison_list = generate_random_RMP_learning_set(J, N)
-    sat_rmp = SatRmp(comparaison_list, J, H, N, SAT_solver_file)
-    sat_rmp.run_SAT(result_file_path)
-    #sat_rmp.read_SAT_result_from_file(result_file_path)
-    try:
-        sat_rmp.create_RMP_model()
-    except AssertionError:
-        print("Problem is not solvable (UNSAT)")
-    except Exception:
-        print("Problem while creating RMP")"""
+    test_rmp(J, N, H)
+    """
 

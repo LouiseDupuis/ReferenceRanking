@@ -23,7 +23,8 @@ class TestingRMP(unittest.TestCase):
     def test_variable(self):
         comparaison_list = generate_random_RMP_learning_set(self.J, self.N)
         SAT_RMP = SatRmp(comparaison_list, self.J, self.H, self.N, self.SAT_solver_path)
-        SAT_RMP.reset()
+
+        # SAT_RMP.reset() se fait a creation de l'objet SatRmp
 
         # verify that all variables have a unique number
         unique_numbers = list(SAT_RMP.X.values()) + list(SAT_RMP.Y.values()) + list(SAT_RMP.D.values()) + list(SAT_RMP.Z.values()) + list(SAT_RMP.Z_prime.values()) + list(SAT_RMP.S.values())
@@ -37,7 +38,7 @@ class TestingRMP(unittest.TestCase):
     def test_sat_solver(self):
         comparaison_list = generate_random_RMP_learning_set(self.J, self.N)
         SAT_RMP = SatRmp(comparaison_list, self.J, self.H, self.N, self.SAT_solver_path)
-        SAT_RMP.reset()
+        # SAT_RMP.reset()
 
         output_file = "Test_output_3456.cnf"
         SAT_RMP.run_SAT(output_file)
