@@ -288,11 +288,15 @@ class SatRmp:
                     for h in range(self.H):
                         clause_parts = []
                         for i in range(self.N):
+                            if i in partie_a:
+                                clause_parts.append(-self.X[(i, h, self.comparaison_list[j][0][i])])
                             if i not in partie_a:
                                 clause_parts.append(self.X[(i, h, self.comparaison_list[j][0][i])])
                             if i in partie_b:
                                 clause_parts.append(-self.X[(i, h, self.comparaison_list[j][1][i])])
-                        clause_parts.append(-self.Y[(partie_a, partie_b)])
+                            if i not in partie_b:
+                                clause_parts.append(self.X[(i, h, self.comparaison_list[j][1][i])])
+                        clause_parts.append(-self.Y[(partie_b, partie_a)])
                         clause_parts.append(self.Z_prime[(j, h)])
                         clause.append(clause_parts)
         return clause
@@ -300,7 +304,7 @@ class SatRmp:
 
     def initiate_clauses(self):
         clauses =  self.clause_1() +  self.clause_2a() +  self.clause_2b() +  self.clause_3a() +  self.clause_3b()
-        clauses += self.clause_3c() +  self.clause_4a() +  self.clause_4b() +  self.clause_4c() +  self.clause_5d()
+        clauses += self.clause_3c() +  self.clause_4a() +  self.clause_4b() +  self.clause_4c() +  self.clause_4d()
         clauses += self.clause_5a() +  self.clause_5b() + self.clause_5c()
         self.clauses = clauses
         return clauses
@@ -360,14 +364,14 @@ def test_rmp(J, N, H):
         sat_rmp.create_RMP_model()
     except AssertionError:
         print("Problem is not solvable (UNSAT)")
-        return False
+        return False, 'UNSAT'
     except Exception:
         print("Problem while creating RMP")
-        return False
+        return False, 'RMP'
     for j in range(J):
         if not sat_rmp.RMP_model.compare(comparaison_list[j][0], comparaison_list[j][1])[0]:
-            return False
-    return True
+            return False, 'Restitution'
+    return True, 'All good'
     
     
 if __name__ == '__main__':
