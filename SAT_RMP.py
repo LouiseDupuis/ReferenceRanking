@@ -200,8 +200,38 @@ class SatRmp:
                 for c in sous_parties:
                     clause.append([ -self.Y[(a, b)], -self.Y[(b, c)], self.Y[(a, c)]])
         return clause
-
+    
     def clause_4a(self):
+        clauses = []
+        for j in range(self.J):
+            clauses.append([ self.S[j, h] for h in range(self.H)])
+        return clauses
+
+    def clause_4b(self):
+        clauses = []
+        for j in range(self.J):
+            for h in range(self.H):
+                for h_prime in range(0, h + 1):
+                    clauses.append([self.Z[j, h_prime], -self.S[j, h]])
+        return clauses
+
+    def clause_4c(self):
+        clauses = []
+        for j in range(self.J):
+            for h_prime in range(self.H):
+                for h in range(h_prime + 1, self.H):
+                    clauses.append([self.Z_prime[j, h_prime], -self.S[j, h]])
+        return clauses
+
+
+    def clause_4d(self):
+        clauses = []
+        for j in range(self.J):
+            for h in range(self.H):
+                clauses.append([ -self.Z_prime[j, h], -self.S[j, h]])
+        return clauses
+
+    def clause_5a(self):
         clause = []
         sous_parties = []
         for taille in range(self.N + 1):
@@ -223,7 +253,7 @@ class SatRmp:
                         clause.append(clause_parts)
         return clause
 
-    def clause_4b(self):
+    def clause_5b(self):
         clause = []
         sous_parties = []
         for taille in range(self.N + 1):
@@ -245,7 +275,7 @@ class SatRmp:
                         clause.append(clause_parts)
         return clause
 
-    def clause_4c(self):
+    def clause_5c(self):
         clause = []
         sous_parties = []
         for taille in range(self.N + 1):
@@ -266,41 +296,12 @@ class SatRmp:
                         clause_parts.append(self.Z_prime[(j, h)])
                         clause.append(clause_parts)
         return clause
-
-    def clause_5a(self):
-        clauses = []
-        for j in range(self.J):
-            for h in range(self.H):
-                for h_prime in range(0, h + 1):
-                    clauses.append([self.Z[j, h_prime], -self.S[j, h]])
-        return clauses
-
-    def clause_5b(self):
-        clauses = []
-        for j in range(self.J):
-            for h_prime in range(self.H):
-                for h in range(h_prime + 1, self.H):
-                    clauses.append([self.Z_prime[j, h_prime], -self.S[j, h]])
-        return clauses
-
-
-    def clause_5c(self):
-        clauses = []
-        for j in range(self.J):
-            for h in range(self.H):
-                clauses.append([ -self.Z_prime[j, h], -self.S[j, h]])
-        return clauses
-
-    def clause_6(self):
-        clauses = []
-        for j in range(self.J):
-            clauses.append([ self.S[j, h] for h in range(self.H)])
-        return clauses
+    
 
     def initiate_clauses(self):
         clauses =  self.clause_1() +  self.clause_2a() +  self.clause_2b() +  self.clause_3a() +  self.clause_3b()
-        clauses += self.clause_3c() +  self.clause_4a() +  self.clause_4b() +  self.clause_4c() +  self.clause_5a()
-        clauses += self.clause_5b() +  self.clause_5c() + self.clause_6()
+        clauses += self.clause_3c() +  self.clause_4a() +  self.clause_4b() +  self.clause_4c() +  self.clause_5d()
+        clauses += self.clause_5a() +  self.clause_5b() + self.clause_5c()
         self.clauses = clauses
         return clauses
     
