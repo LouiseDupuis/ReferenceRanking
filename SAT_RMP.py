@@ -50,7 +50,7 @@ class RMP:
                 # 1 < 2
                 return False, False
         return False, True
-
+    
 class SatRmp:
     
     instance_id = 1
@@ -132,8 +132,9 @@ class SatRmp:
         result_dict = bidict()
         for h in range(self.H):
             for h_prime in range(self.H):
-                result_dict[(h, h_prime)] = self.unique_number
-                self.unique_number += 1
+                if h != h_prime:
+                    result_dict[(h, h_prime)] = self.unique_number
+                    self.unique_number += 1
         return result_dict
 
 
@@ -158,8 +159,8 @@ class SatRmp:
 
     def clause_2a(self):
         clause = []
-        for h in range(self.H):
-            for h_prime in range(h + 1, self.H):
+        for h_prime in range(self.H):
+            for h in range(h_prime + 1, self.H):
                 clause.append([self.D[(h, h_prime)], self.D[(h_prime, h)]])
         return clause
 
@@ -167,9 +168,9 @@ class SatRmp:
         clause = []
         for i in range(self.N):
             Xi = [self.comparaison_list[el][0][i] for el in range(self.J)] + [self.comparaison_list[el][1][i] for el in range(self.J)]
-            for k in Xi:
-                for h in range(self.H):
-                    for h_prime in range(self.H):
+            for h in range(self.H):
+                for h_prime in range(self.H):
+                    for k in Xi:
                         if h != h_prime:
                             clause.append([self.X[(i, h_prime, k)], -self.X[(i, h, k)], -self.D[(h, h_prime)]])
         return clause
@@ -183,8 +184,8 @@ class SatRmp:
     def clause_3b(self):
         clause = []
         for partie_a, partie_b in self.Y:
-            if set(partie_a).issubset(set(partie_b)):
-                clause.append([self.Y[(partie_b, partie_a)]])
+            if set(partie_b).issubset(set(partie_a)):
+                clause.append([self.Y[(partie_a, partie_b)]])
         return clause
 
     def clause_3c(self):
@@ -202,70 +203,84 @@ class SatRmp:
 
     def clause_4a(self):
         clause = []
-        for partie_a, partie_b in self.Y:
-            for j in range(self.J):
-                for h in range(self.H):
-                    clause_parts = []
-                    for i in range(self.N):
-                        if i not in partie_a:
-                            clause_parts.append(self.X[(i, h, self.comparaison_list[j][0][i])])
-                        if i in partie_b:
-                            clause_parts.append(-self.X[(i, h, self.comparaison_list[j][1][i])])
-                    clause_parts.append(self.Y[(partie_a, partie_b)])
-                    clause_parts.append(-self.Z[(j, h)])
-                    clause.append(clause_parts)
+        sous_parties = []
+        for taille in range(self.N + 1):
+            combi = list(combinations(list(range(self.N)), taille))
+            sous_parties += combi
+            
+        for partie_a in sous_parties:
+            for partie_b in sous_parties:
+                for j in range(self.J):
+                    for h in range(self.H):
+                        clause_parts = []
+                        for i in range(self.N):
+                            if i not in partie_a:
+                                clause_parts.append(self.X[(i, h, self.comparaison_list[j][0][i])])
+                            if i in partie_b:
+                                clause_parts.append(-self.X[(i, h, self.comparaison_list[j][1][i])])
+                        clause_parts.append(self.Y[(partie_a, partie_b)])
+                        clause_parts.append(-self.Z[(j, h)])
+                        clause.append(clause_parts)
         return clause
 
     def clause_4b(self):
         clause = []
-        for partie_a, partie_b in self.Y:
-            for j in range(self.J):
-                for h in range(self.H):
-                    clause_parts = []
-                    for i in range(self.N):
-                        if i not in partie_a:
-                            clause_parts.append(self.X[(i, h, self.comparaison_list[j][1][i])])
-                        if i in partie_b:
-                            clause_parts.append(-self.X[(i, h, self.comparaison_list[j][0][i])])
-                    clause_parts.append(self.Y[(partie_a, partie_b)])
-                    clause_parts.append(-self.Z_prime[(j, h)])
-                    clause.append(clause_parts)
+        sous_parties = []
+        for taille in range(self.N + 1):
+            combi = list(combinations(list(range(self.N)), taille))
+            sous_parties += combi
+            
+        for partie_a in sous_parties:
+            for partie_b in sous_parties:
+                for j in range(self.J):
+                    for h in range(self.H):
+                        clause_parts = []
+                        for i in range(self.N):
+                            if i not in partie_a:
+                                clause_parts.append(self.X[(i, h, self.comparaison_list[j][1][i])])
+                            if i in partie_b:
+                                clause_parts.append(-self.X[(i, h, self.comparaison_list[j][0][i])])
+                        clause_parts.append(self.Y[(partie_a, partie_b)])
+                        clause_parts.append(-self.Z_prime[(j, h)])
+                        clause.append(clause_parts)
         return clause
 
     def clause_4c(self):
         clause = []
-        for partie_a, partie_b in self.Y:
-            for j in range(self.J):
-                for h in range(self.H):
-                    clause_parts = []
-                    for i in range(self.N):
-                        if i in partie_a:
-                            clause_parts.append(-self.X[(i, h, self.comparaison_list[j][0][i])])
-                        else:
-                            clause_parts.append(self.X[(i, h, self.comparaison_list[j][0][i])])
-                        if i in partie_b:
-                            clause_parts.append(-self.X[(i, h, self.comparaison_list[j][1][i])])
-                        else:
-                            clause_parts.append(self.X[(i, h, self.comparaison_list[j][0][i])])
-                    clause_parts.append(-self.Y[(partie_b, partie_a)])
-                    clause_parts.append(self.Z_prime[(j, h)])
-                    clause.append(clause_parts)
+        sous_parties = []
+        for taille in range(self.N + 1):
+            combi = list(combinations(list(range(self.N)), taille))
+            sous_parties += combi
+            
+        for partie_a in sous_parties:
+            for partie_b in sous_parties:
+                for j in range(self.J):
+                    for h in range(self.H):
+                        clause_parts = []
+                        for i in range(self.N):
+                            if i not in partie_a:
+                                clause_parts.append(self.X[(i, h, self.comparaison_list[j][0][i])])
+                            if i in partie_b:
+                                clause_parts.append(-self.X[(i, h, self.comparaison_list[j][1][i])])
+                        clause_parts.append(-self.Y[(partie_a, partie_b)])
+                        clause_parts.append(self.Z_prime[(j, h)])
+                        clause.append(clause_parts)
         return clause
 
     def clause_5a(self):
         clauses = []
         for j in range(self.J):
             for h in range(self.H):
-                for h_prime in range(h + 1, self.H):
-                    clauses.append([self.Z[j, h], -self.S[j, h_prime]])
+                for h_prime in range(0, h + 1):
+                    clauses.append([self.Z[j, h_prime], -self.S[j, h]])
         return clauses
 
     def clause_5b(self):
         clauses = []
         for j in range(self.J):
-            for h in range(self.H):
-                for h_prime in range(h + 1, self.H):
-                    clauses.append([self.Z_prime[j, h], -self.S[j, h_prime]])
+            for h_prime in range(self.H):
+                for h in range(h_prime + 1, self.H):
+                    clauses.append([self.Z_prime[j, h_prime], -self.S[j, h]])
         return clauses
 
 
