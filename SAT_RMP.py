@@ -5,7 +5,6 @@ import random
 import pylgl
 
 
-
 class RMP:
 
     def __init__(self, reference_points, coalition_importance):
@@ -18,18 +17,6 @@ class RMP:
         self.reference_points = reference_points
         self.criteria = list(range(len(reference_points[0])))
         self.coalition_importance = coalition_importance
-        
-    def __str__(self):
-        # function to print a summary of a RMP model
-        print("============================ RMP Model ==========================")
-        print("Number of Reference Points : ", len(self.reference_points))
-        print()
-        i = 0
-        for ref in self.reference_points:
-            print(i, " ", ref)
-            i += 1
-        print()
-        return ''
 
     def __str__(self):
         # function to print a summary of a RMP model
@@ -47,11 +34,7 @@ class RMP:
         """
             fonction de comparaison de domination de deux ensembles de critères
         """
-<<<<<<< HEAD
         # print('coal_1', coalition_1, 'coal_2', coalition_2)
-=======
-        #print('coal_1', coalition_1, 'coal_2', coalition_2)
->>>>>>> 761d66689ac9d3b0385cab93905d647a59954fdc
         return self.coalition_importance[(coalition_1, coalition_2)] > 0
 
     def dominant_criteria_set(self, a, reference_point):
@@ -79,25 +62,15 @@ class RMP:
                         if rh[i] > rh_prime[i]:
                             return False
         return True
-<<<<<<< HEAD
 
-=======
-    
->>>>>>> 761d66689ac9d3b0385cab93905d647a59954fdc
     def compare(self, object_1, object_2):
         """
             returns a tuple ( is_preferred(object_1, object_2), is_indifferent(object_1, object_2))
         """
         for reference_point in self.reference_points:
-<<<<<<< HEAD
             # print(reference_point)
             coalition_1 = self.dominant_criteria_set(object_1, reference_point)
             coalition_2 = self.dominant_criteria_set(object_2, reference_point)
-=======
-            #print(reference_point)
-            coalition_1 =  self.dominant_criteria_set(object_1, reference_point)
-            coalition_2 =  self.dominant_criteria_set(object_2, reference_point)
->>>>>>> 761d66689ac9d3b0385cab93905d647a59954fdc
             if not self.is_more_important_coalition(coalition_2, coalition_1):
                 # 1 > 2
                 return True, False
@@ -105,8 +78,6 @@ class RMP:
                 # 1 < 2
                 return False, False
         return False, True
-    
-
 
 
 class SatRmp:
@@ -134,7 +105,8 @@ class SatRmp:
         self.clauses = None
         self.SAT_result = None
         self.RMP_model = None
-        self.comparison_clauses = ['4a', '4b', '4c', '4d', '5a', '5b', '5c']
+        self.comparaison_to_clause = {j: [] for j in range(self.J)}
+        self.clause_index = 0
         self.reset()
 
     def reset(self):
@@ -212,6 +184,7 @@ class SatRmp:
                     for k_prime in Xi:
                         if k > k_prime:
                             clause.append([-self.X[(i, h, k_prime)], self.X[(i, h, k)]])
+                            self.clause_index += 1
         return clause
 
     def clause_2a(self):
@@ -219,28 +192,27 @@ class SatRmp:
         for h_prime in range(self.H):
             for h in range(h_prime + 1, self.H):
                 clause.append([self.D[(h, h_prime)], self.D[(h_prime, h)]])
+                self.clause_index += 1
         return clause
 
     def clause_2b(self):
         clause = []
         for i in range(self.N):
-<<<<<<< HEAD
             Xi = [self.comparaison_list[el][0][i] for el in range(self.J)] + [self.comparaison_list[el][1][i] for el in
                                                                               range(self.J)]
-=======
-            Xi = [self.comparaison_list[el][0][i] for el in range(self.J)] + [self.comparaison_list[el][1][i] for el in range(self.J)]
->>>>>>> 761d66689ac9d3b0385cab93905d647a59954fdc
             for h in range(self.H):
                 for h_prime in range(self.H):
                     for k in Xi:
                         if h != h_prime:
                             clause.append([self.X[(i, h_prime, k)], -self.X[(i, h, k)], -self.D[(h, h_prime)]])
+                            self.clause_index += 1
         return clause
 
     def clause_3a(self):
         clause = []
         for partie_a, partie_b in self.Y:
             clause.append([self.Y[(partie_a, partie_b)], self.Y[(partie_b, partie_a)]])
+            self.clause_index += 1
         return clause
 
     def clause_3b(self):
@@ -248,6 +220,7 @@ class SatRmp:
         for partie_a, partie_b in self.Y:
             if set(partie_b).issubset(set(partie_a)):
                 clause.append([self.Y[(partie_a, partie_b)]])
+                self.clause_index += 1
         return clause
 
     def clause_3c(self):
@@ -261,13 +234,15 @@ class SatRmp:
             for b in sous_parties:
                 for c in sous_parties:
                     clause.append([-self.Y[(a, b)], -self.Y[(b, c)], self.Y[(a, c)]])
+                    self.clause_index += 1
         return clause
-    
+
     def clause_4a(self):
-<<<<<<< HEAD
         clauses = []
         for j in range(self.J):
             clauses.append([self.S[j, h] for h in range(self.H)])
+            self.comparaison_to_clause[j].append(self.clause_index)
+            self.clause_index += 1
         return clauses
 
     def clause_4b(self):
@@ -276,21 +251,8 @@ class SatRmp:
             for h in range(self.H):
                 for h_prime in range(0, h + 1):
                     clauses.append([self.Z[j, h_prime], -self.S[j, h]])
-        return clauses
-
-    def clause_4c(self):
-=======
-        clauses = []
-        for j in range(self.J):
-            clauses.append([ self.S[j, h] for h in range(self.H)])
-        return clauses
-
-    def clause_4b(self):
-        clauses = []
-        for j in range(self.J):
-            for h in range(self.H):
-                for h_prime in range(0, h + 1):
-                    clauses.append([self.Z[j, h_prime], -self.S[j, h]])
+                    self.comparaison_to_clause[j].append(self.clause_index)
+                    self.clause_index += 1
         return clauses
 
     def clause_4c(self):
@@ -299,97 +261,18 @@ class SatRmp:
             for h_prime in range(self.H):
                 for h in range(h_prime + 1, self.H):
                     clauses.append([self.Z_prime[j, h_prime], -self.S[j, h]])
+                    self.comparaison_to_clause[j].append(self.clause_index)
+                    self.clause_index += 1
         return clauses
 
-
-    def clause_4d(self):
->>>>>>> 761d66689ac9d3b0385cab93905d647a59954fdc
-        clauses = []
-        for j in range(self.J):
-            for h_prime in range(self.H):
-                for h in range(h_prime + 1, self.H):
-                    clauses.append([self.Z_prime[j, h_prime], -self.S[j, h]])
-        return clauses
-
-<<<<<<< HEAD
     def clause_4d(self):
         clauses = []
         for j in range(self.J):
             for h in range(self.H):
                 clauses.append([-self.Z_prime[j, h], -self.S[j, h]])
+                self.comparaison_to_clause[j].append(self.clause_index)
+                self.clause_index += 1
         return clauses
-=======
-    def clause_5a(self):
-        clause = []
-        sous_parties = []
-        for taille in range(self.N + 1):
-            combi = list(combinations(list(range(self.N)), taille))
-            sous_parties += combi
-            
-        for partie_a in sous_parties:
-            for partie_b in sous_parties:
-                for j in range(self.J):
-                    for h in range(self.H):
-                        clause_parts = []
-                        for i in range(self.N):
-                            if i not in partie_a:
-                                clause_parts.append(self.X[(i, h, self.comparaison_list[j][0][i])])
-                            if i in partie_b:
-                                clause_parts.append(-self.X[(i, h, self.comparaison_list[j][1][i])])
-                        clause_parts.append(self.Y[(partie_a, partie_b)])
-                        clause_parts.append(-self.Z[(j, h)])
-                        clause.append(clause_parts)
-        return clause
-
-    def clause_5b(self):
-        clause = []
-        sous_parties = []
-        for taille in range(self.N + 1):
-            combi = list(combinations(list(range(self.N)), taille))
-            sous_parties += combi
-            
-        for partie_a in sous_parties:
-            for partie_b in sous_parties:
-                for j in range(self.J):
-                    for h in range(self.H):
-                        clause_parts = []
-                        for i in range(self.N):
-                            if i not in partie_a:
-                                clause_parts.append(self.X[(i, h, self.comparaison_list[j][1][i])])
-                            if i in partie_b:
-                                clause_parts.append(-self.X[(i, h, self.comparaison_list[j][0][i])])
-                        clause_parts.append(self.Y[(partie_a, partie_b)])
-                        clause_parts.append(-self.Z_prime[(j, h)])
-                        clause.append(clause_parts)
-        return clause
-
-    def clause_5c(self):
-        clause = []
-        sous_parties = []
-        for taille in range(self.N + 1):
-            combi = list(combinations(list(range(self.N)), taille))
-            sous_parties += combi
-            
-        for partie_a in sous_parties:
-            for partie_b in sous_parties:
-                for j in range(self.J):
-                    for h in range(self.H):
-                        clause_parts = []
-                        for i in range(self.N):
-                            if i in partie_a:
-                                clause_parts.append(-self.X[(i, h, self.comparaison_list[j][0][i])])
-                            if i not in partie_a:
-                                clause_parts.append(self.X[(i, h, self.comparaison_list[j][0][i])])
-                            if i in partie_b:
-                                clause_parts.append(-self.X[(i, h, self.comparaison_list[j][1][i])])
-                            if i not in partie_b:
-                                clause_parts.append(self.X[(i, h, self.comparaison_list[j][1][i])])
-                        clause_parts.append(-self.Y[(partie_b, partie_a)])
-                        clause_parts.append(self.Z_prime[(j, h)])
-                        clause.append(clause_parts)
-        return clause
-    
->>>>>>> 761d66689ac9d3b0385cab93905d647a59954fdc
 
     def clause_5a(self):
         clause = []
@@ -411,6 +294,8 @@ class SatRmp:
                         clause_parts.append(self.Y[(partie_a, partie_b)])
                         clause_parts.append(-self.Z[(j, h)])
                         clause.append(clause_parts)
+                        self.comparaison_to_clause[j].append(self.clause_index)
+                        self.clause_index += 1
         return clause
 
     def clause_5b(self):
@@ -433,6 +318,8 @@ class SatRmp:
                         clause_parts.append(self.Y[(partie_a, partie_b)])
                         clause_parts.append(-self.Z_prime[(j, h)])
                         clause.append(clause_parts)
+                        self.comparaison_to_clause[j].append(self.clause_index)
+                        self.clause_index += 1
         return clause
 
     def ignore(self):
@@ -481,40 +368,20 @@ class SatRmp:
                         clause_parts.append(-self.Y[(partie_b, partie_a)])
                         clause_parts.append(self.Z_prime[(j, h)])
                         clause.append(clause_parts)
+                        self.comparaison_to_clause[j].append(self.clause_index)
+                        self.clause_index += 1
         return clause
 
     def initiate_clauses(self):
-<<<<<<< HEAD
         self.structure_clauses_index = len(self.clause_1() +  self.clause_2a() +  self.clause_2b()
                                            + self.clause_3a() +  self.clause_3b() + self.clause_3c())
-        clauses_index = dict()
-        clauses = self.clause_1() +  self.clause_2a() +  self.clause_2b() +  self.clause_3a() +  self.clause_3b() + self.clause_3c()
-        clauses += self.clause_4a()
-        print("4a ", self.clause_4a())
-        clauses_index['4a'] = len(clauses)
-        clauses += self.clause_4b()
-        print("4b ", self.clause_4b())
-        clauses_index['4b'] = len(clauses)
-        clauses += self.clause_4c()
-        print("4c ", self.clause_4c())
-        clauses_index['4c'] = len(clauses)
-        clauses += self.clause_4d()
-        clauses_index['4d'] = len(clauses)
-        clauses += self.clause_5a()
-        clauses_index['5a'] = len(clauses)
-        clauses += self.clause_5b()
-        clauses_index['5b'] = len(clauses)
-        clauses += self.clause_5c()
-        clauses_index['5c'] = len(clauses)
-=======
-        clauses =  self.clause_1() +  self.clause_2a() +  self.clause_2b() +  self.clause_3a() +  self.clause_3b()
-        clauses += self.clause_3c() +  self.clause_4a() +  self.clause_4b() +  self.clause_4c() +  self.clause_4d()
-        clauses += self.clause_5a() +  self.clause_5b() + self.clause_5c()
->>>>>>> 761d66689ac9d3b0385cab93905d647a59954fdc
+
+        clauses =  self.clause_1() +  self.clause_2a() +  self.clause_2b() +  self.clause_3a() +  self.clause_3b() + self.clause_3c()
+        clauses +=  self.clause_4a() + self.clause_4b() + self.clause_4c() + self.clause_4d()
+        clauses +=  self.clause_5a() + self.clause_5b() + self.clause_5c()
         self.clauses = clauses
-        self.clauses_index = clauses_index
+        print("len", self.structure_clauses_index, len(self.clauses), self.clause_index)
         return clauses
-<<<<<<< HEAD
 
     def get_clause_numbers(self, j):
         """
@@ -547,17 +414,11 @@ class SatRmp:
 
     def adjust_intervals(self, interval_1, interval_2):
         if interval_1[1] < interval_2[0]:
-=======
-    
-    def adjust_intervals(self, interval_1, interval_2):
-        if interval_1[1] <  interval_2[0]:
->>>>>>> 761d66689ac9d3b0385cab93905d647a59954fdc
             raise Exception("Couldn't create RMP model")
         elif interval_1[0] >= interval_2[1]:
             return interval_1, interval_2
         elif interval_1[1] <= interval_2[1]:
             intersection = [max(interval_1[0], interval_2[0]), min(interval_1[1], interval_2[1])]
-<<<<<<< HEAD
             middle = intersection[0] + (intersection[1] - intersection[0]) / 2
             return [middle, intersection[1]], [intersection[0], middle]
         elif interval_2[1] <= interval_1[1]:
@@ -565,15 +426,6 @@ class SatRmp:
             middle = intersection[0] + (intersection[1] - intersection[0]) / 2
             return [middle, interval_1[1]], [interval_2[0], middle]
 
-=======
-            middle = intersection[0] + (intersection[1] - intersection[0])/2
-            return [middle, intersection[1]], [intersection[0], middle]
-        elif interval_2[1] <= interval_1[1]:
-            intersection = [max(interval_1[0], interval_2[0]), min(interval_1[1], interval_2[1])]
-            middle = intersection[0] + (intersection[1] - intersection[0])/2
-            return [middle, interval_1[1]], [interval_2[0], middle]    
-    
->>>>>>> 761d66689ac9d3b0385cab93905d647a59954fdc
     def run_SAT(self):
         self.SAT_result = pylgl.solve(self.clauses)
 
@@ -592,17 +444,13 @@ class SatRmp:
 
         # contruire les profils de référence
         reference_points = []
-        
+
         for h in range(self.H):
             reference_point_interval = []
             for i in range(self.N):
                 min_value, max_value = 0, 1
-<<<<<<< HEAD
                 Xi = [self.comparaison_list[el][0][i] for el in range(self.J)] + [self.comparaison_list[el][1][i] for el
                                                                                   in range(self.J)]
-=======
-                Xi = [self.comparaison_list[el][0][i] for el in range(self.J)] + [self.comparaison_list[el][1][i] for el in range(self.J)]
->>>>>>> 761d66689ac9d3b0385cab93905d647a59954fdc
                 for k in Xi:
                     if SAT_X[i, h, k] > 0:
                         max_value = min(max_value, k)
@@ -613,11 +461,7 @@ class SatRmp:
                 # construction des intervals de valeurs possible pour les points de references
                 reference_point_interval.append([min_value, max_value])
             reference_points.append(reference_point_interval)
-<<<<<<< HEAD
 
-=======
-            
->>>>>>> 761d66689ac9d3b0385cab93905d647a59954fdc
         # Ajustement des intervals pour respecter la dominance entre points de refenrences
         for d in SAT_D:
             if SAT_D[d] > 0:
@@ -626,11 +470,7 @@ class SatRmp:
                 for i in range(len(rh)):
                     tmp = self.adjust_intervals(rh[i], rh_prime[i])
                     rh[i], rh_prime[i] = tmp
-<<<<<<< HEAD
 
-=======
-                    
->>>>>>> 761d66689ac9d3b0385cab93905d647a59954fdc
         # Choix des valeurs des critères dans les intervals ajustés
         for reference_point in reference_points:
             for i in range(len(reference_point)):
@@ -638,18 +478,10 @@ class SatRmp:
                 while not criterion > reference_point[i][0]:
                     criterion = random.uniform(reference_point[i][0], rh[i][1])
                 reference_point[i] = criterion
-<<<<<<< HEAD
 
         self.RMP_model = RMP(reference_points, SAT_Y)
 
 
-=======
-            
-        self.RMP_model = RMP(reference_points, SAT_Y)
-
-
-    
->>>>>>> 761d66689ac9d3b0385cab93905d647a59954fdc
 def generate_random_RMP_learning_set(J, N):
     result = []
     for _ in range(J):
@@ -737,20 +569,12 @@ def test_rmp(J, N, H, random_comparaisons):
         return False, 'Dominance'
     return True, sat_rmp
 
-<<<<<<< HEAD
 
 def test_multiple_rmp_stats(iterations, J, N, H, random_comparaisons):
     stats = {'UNSAT': 0, 'RMP': 0, 'Restitution': 0, 'Dominance': 0, 'Success': 0}
     success_models = []
     for _ in range(iterations):
         test_result = test_rmp(J, N, H, random_comparaisons)
-=======
-def test_multiple_rmp_stats(iterations, J, N, H):
-    stats = {'UNSAT': 0, 'RMP': 0, 'Restitution': 0, 'Dominance': 0, 'Success': 0}
-    success_models = []
-    for _ in range(iterations):
-        test_result = test_rmp(J, N, H)
->>>>>>> 761d66689ac9d3b0385cab93905d647a59954fdc
         if test_result[0]:
             stats['Success'] += 1
             success_models.append(test_result[1])
@@ -758,7 +582,6 @@ def test_multiple_rmp_stats(iterations, J, N, H):
             stats[test_result[1]] += 1
     print()
     return stats, success_models
-<<<<<<< HEAD
 
 
 
@@ -816,9 +639,9 @@ print(test_multiple_rmp_stats(10, J, N, H, False))"""
 
 from pysat.examples.musx import MUSX
 from pysat.formula import WCNF, CNF
-J = 7
+J = 8
 N = 4
-H = 1
+H = 2
 comparaison_list = generate_RMP_learning_set(J, N, H)
 sat_rmp = SatRmp(comparaison_list, J, H, N)
 sat_rmp.run_SAT()
@@ -861,17 +684,6 @@ else:
 
 
 
-print(contrastive_sat_rmp.structure_clauses_index)
-print(contrastive_sat_rmp.clauses_index)
-
-if mus is not None:
-    for clause in mus:
-        if clause > contrastive_sat_rmp.structure_clauses_index:
-            j = contrastive_sat_rmp.get_comparison_from_clause(clause)
-            print(j)
-
-
-
 
 
 
@@ -906,19 +718,4 @@ sat_rmp = SatRmp(comparaison_list, J, H, N)
 sat_rmp.run_SAT()
 sat_rmp.create_RMP_model()"""
     
-=======
-    
-    
-if __name__ == '__main__':
-    """
-    J = 10
-    N = 3
-    H = 2
-    iterations = 5
-    stats = test_multiple_rmp_stats(iterations, J, N, H)
-    print(stats[0], '\n')
-    for success in stats[1]:
-        print(success.RMP_model)
-    """
->>>>>>> 761d66689ac9d3b0385cab93905d647a59954fdc
 
