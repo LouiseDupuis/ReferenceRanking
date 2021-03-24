@@ -49,8 +49,4 @@ while not unsat_model_found:
             mus = generate_musx_mus(contrastive_sat_rmp, J)
             # look for mus with 2 comparisons in marco mus list
             target_muses = target_mus_lookup(contrastive_sat_rmp, marco_mus_list, J)
-            with open('logs/target_muses_' + str(iteration_number) + '.txt', 'w') as file:
-                for mus, mus_stat in target_muses:
-                    file.write(mus + '\n')
-                    file.write(mus_stat + '\n')
-                    file.write('\n')
+            write_target_logs(iteration_number, target_muses)

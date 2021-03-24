@@ -132,3 +132,10 @@ def target_mus_lookup(contrastive_sat_rmp, marco_mus_list, J):
 def marco_mus_solver(intput_cnf, output_file):
     os.system("timeout 1m python3 MARCO/marco.py " + str(intput_cnf + " -v >" + str(output_file)))
 
+
+def write_target_logs(iteration_number, target_muses):
+    with open('logs/target_muses_' + str(iteration_number) + '.txt', 'w') as file:
+                for mus, mus_stat in target_muses:
+                    file.write(mus + '\n')
+                    file.write(mus_stat + '\n')
+                    file.write('\n')
