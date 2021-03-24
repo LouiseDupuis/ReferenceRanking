@@ -33,7 +33,7 @@ class SatRmp:
         self.comparaison_to_clause = {j: [] for j in range(self.J)}
         self.clause_index = 0
         self.clauses_groups = dict( [ (i, []) for i in range(6)])
-        self.clauses_names =  dict( [ (i, []) for i in range(6)])
+        self.clauses_names =  dict( )
         self.reset()
 
     def reset(self):
@@ -113,6 +113,7 @@ class SatRmp:
                             clause.append([-self.X[(i, h, k_prime)], self.X[(i, h, k)]])
                             self.clause_index += 1
         self.clauses_groups[1] = clause
+        self.clauses_names['1'] = clause
         return clause
 
     def clause_2a(self):
@@ -122,6 +123,7 @@ class SatRmp:
                 clause.append([self.D[(h, h_prime)], self.D[(h_prime, h)]])
                 self.clause_index += 1
         self.clauses_groups[2] += clause
+        self.clause_names['2a'] = clause
         return clause
 
     def clause_2b(self):
@@ -136,6 +138,7 @@ class SatRmp:
                             clause.append([self.X[(i, h_prime, k)], -self.X[(i, h, k)], -self.D[(h, h_prime)]])
                             self.clause_index += 1
         self.clauses_groups[2] += clause
+        self.clause_names['2b'] = clause
         return clause
 
     def clause_3a(self):
@@ -144,6 +147,7 @@ class SatRmp:
             clause.append([self.Y[(partie_a, partie_b)], self.Y[(partie_b, partie_a)]])
             self.clause_index += 1
         self.clauses_groups[3] += clause
+        self.clause_names['3a'] = clause
         return clause
 
     def clause_3b(self):
@@ -153,6 +157,7 @@ class SatRmp:
                 clause.append([self.Y[(partie_a, partie_b)]])
                 self.clause_index += 1
         self.clauses_groups[3] += clause
+        self.clause_names['3b'] = clause
         return clause
 
     def clause_3c(self):
@@ -168,6 +173,7 @@ class SatRmp:
                     clause.append([-self.Y[(a, b)], -self.Y[(b, c)], self.Y[(a, c)]])
                     self.clause_index += 1
         self.clauses_groups[3] += clause
+        self.clause_names['3c'] = clause
         return clause
 
     def clause_4a(self):
@@ -177,6 +183,7 @@ class SatRmp:
             self.comparaison_to_clause[j].append(self.clause_index)
             self.clause_index += 1
         self.clauses_groups[4] += clauses
+        self.clause_names['4a'] = clauses 
         return clauses
 
     def clause_4b(self):
@@ -188,6 +195,7 @@ class SatRmp:
                     self.comparaison_to_clause[j].append(self.clause_index)
                     self.clause_index += 1
         self.clauses_groups[4] += clauses
+        self.clause_names['4b'] = clauses
         return clauses
 
     def clause_4c(self):
@@ -199,6 +207,7 @@ class SatRmp:
                     self.comparaison_to_clause[j].append(self.clause_index)
                     self.clause_index += 1
         self.clauses_groups[4] += clauses
+        self.clause_names['4c'] = clauses
         return clauses
 
     def clause_4d(self):
@@ -209,6 +218,7 @@ class SatRmp:
                 self.comparaison_to_clause[j].append(self.clause_index)
                 self.clause_index += 1
         self.clauses_groups[4] += clauses
+        self.clause_names['4d'] = clauses
         return clauses
 
     def clause_5a(self):
@@ -234,6 +244,7 @@ class SatRmp:
                         self.comparaison_to_clause[j].append(self.clause_index)
                         self.clause_index += 1
         self.clauses_groups[5] += clause
+        self.clause_names['5a'] = clause
         return clause
 
     def clause_5b(self):
@@ -259,6 +270,7 @@ class SatRmp:
                         self.comparaison_to_clause[j].append(self.clause_index)
                         self.clause_index += 1
         self.clauses_groups[5] += clause
+        self.clause_names['5b'] = clause
         return clause
 
     def clause_5c(self):
@@ -284,6 +296,7 @@ class SatRmp:
                         self.comparaison_to_clause[j].append(self.clause_index)
                         self.clause_index += 1
         self.clauses_groups[5] += clause
+        self.clause_names['5b'] = clause
         return clause
 
     def initiate_clauses(self):        

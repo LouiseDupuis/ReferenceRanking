@@ -105,11 +105,11 @@ def read_marco_output(path):
 def target_mus_lookup(contrastive_sat_rmp, marco_mus_list, J):
     target_muses = []
     for mus in marco_mus_list:
-        mus_stats = {'struct': 0, 'comparison': []}
+        mus_stats = {'struct_number': 0, 'comparison': []}
         mus_comparisons = set()
         for clause in mus:
             if clause < contrastive_sat_rmp.structure_clauses_index:
-                mus_stats['struct'] += 1
+                mus_stats['struct_number'] += 1
             else:
                 for j in contrastive_sat_rmp.comparaison_to_clause:
                     if clause in contrastive_sat_rmp.comparaison_to_clause[j]:
