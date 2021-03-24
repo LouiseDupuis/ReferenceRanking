@@ -76,7 +76,7 @@ def generate_marco_mus_list(contrastive_sat_rmp):
     contrastive_sat_rmp.to_gcnf_file("Logs/clauses_{}.gcnf".format(iteration_number))
     marco_mus_solver("Logs/clauses_{}.cnf".format(iteration_number), "Logs/output_MARCO_{}.txt".format(iteration_number))
     marco_mus_list = read_marco_output("Logs/output_MARCO_{}.txt".format(iteration_number))  
-    return marco_mus_list
+    return marco_mus_list, iteration_number
 
 
 
@@ -112,6 +112,7 @@ def target_mus_lookup(contrastive_sat_rmp, marco_mus_list, J):
             mus_stats[name] = []
         mus_comparisons = set()
         for clause in mus:
+            clause = int(clause)
             if clause < contrastive_sat_rmp.structure_clauses_index:
                 mus_stats['struct_number'] += 1
                 for name in contrastive_sat_rmp.clause_names:

@@ -33,7 +33,7 @@ class SatRmp:
         self.comparaison_to_clause = {j: [] for j in range(self.J)}
         self.clause_index = 0
         self.clauses_groups = dict( [ (i, []) for i in range(6)])
-        self.clauses_names =  dict( )
+        self.clause_names =  dict( )
         self.reset()
 
     def reset(self):
@@ -113,7 +113,7 @@ class SatRmp:
                             clause.append([-self.X[(i, h, k_prime)], self.X[(i, h, k)]])
                             self.clause_index += 1
         self.clauses_groups[1] = clause
-        self.clauses_names['1'] = clause
+        self.clause_names['1'] = clause
         return clause
 
     def clause_2a(self):
