@@ -1,6 +1,7 @@
 from itertools import combinations
 import random
 from RMP import RMP
+import os
 
 
 
@@ -59,3 +60,7 @@ def generate_RMP_learning_set(J, N, H, rounded=True):
                 result.append((n, p))
             comparison_count += 1
     return result
+
+
+def marco_mus_solver(intput_cnf, output_file):
+    os.system("python3 MARCO/marco.py " + str(intput_cnf + " -v >" + str(output_file)))
