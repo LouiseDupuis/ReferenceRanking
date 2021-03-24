@@ -2,6 +2,9 @@ from itertools import combinations
 import random
 from RMP import RMP
 import os
+from pysat.formula import WCNF, CNF
+from pysat.examples.musx import MUSX
+
 
 
 
@@ -62,5 +65,62 @@ def generate_RMP_learning_set(J, N, H, rounded=True):
     return result
 
 
+def generate_marco_mus_list(contrastive_sat_rmp):
+    iteration_number = 0
+    with open("Logs/iteration_number.txt", "r+") as file:
+        iteration_number = int(file.read()) + 1
+        file.seek(0)
+        file.write(str(iteration_number))
+        file.truncate()
+    contrastive_sat_rmp.to_cnf_file("Logs/clauses_{}.cnf".format(iteration_number))
+    contrastive_sat_rmp.to_gcnf_file("Logs/clauses_{}.gcnf".format(iteration_number))
+    marco_mus_solver("Logs/clauses_{}.cnf".format(iteration_number), "Logs/output_MARCO_{}.txt".format(iteration_number))
+    marco_mus_list = read_marco_output("Logs/output_MARCO_{}.txt".format(iteration_number))  
+    return marco_mus_list
+
+
+
+def generate_musx_mus(contrastive_sat_rmp, J):
+    wcnf = WCNF()
+    for i in range(len(contrastive_sat_rmp.clauses)):
+        if i in contrastive_sat_rmp.comparaison_to_clause[J]:
+            wcnf.append(contrastive_sat_rmp.clauses[i])
+        else:
+            wcnf.append(contrastive_sat_rmp.clauses[i], weight=1)
+    musx = MUSX(wcnf, verbosity=0)
+    mus = musx.compute()
+    return mus 
+
+
+
+def read_marco_output(path):
+    mus_list = []
+    with open(path, "r") as file:
+        for line in file:
+            if line[0] == "U":
+                mus_list.append(line.split()[1:])
+    return mus_list
+
+
+def target_mus_lookup(contrastive_sat_rmp, marco_mus_list, J):
+    target_muses = []
+    for mus in marco_mus_list:
+        mus_stats = {'struct': 0, 'comparison': []}
+        mus_comparisons = set()
+        for clause in mus:
+            if clause < contrastive_sat_rmp.structure_clauses_index:
+                mus_stats['struct'] += 1
+            else:
+                for j in contrastive_sat_rmp.comparaison_to_clause:
+                    if clause in contrastive_sat_rmp.comparaison_to_clause[j]:
+                        mus_comparisons.add(j)
+        mus_stats['comparison'] = list(mus_comparisons)
+        if len(mus_stats['comparison']) == 2 and (J in mus_stats['comparison']):
+            target_muses.append((mus, mus_stats))
+    return target_muses
+
+
+
 def marco_mus_solver(intput_cnf, output_file):
-    os.system("python3 MARCO/marco.py " + str(intput_cnf + " -v >" + str(output_file)))
+    os.system("timeout 1m python3 MARCO/marco.py " + str(intput_cnf + " -v >" + str(output_file)))
+
