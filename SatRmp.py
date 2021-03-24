@@ -296,7 +296,7 @@ class SatRmp:
                         self.comparaison_to_clause[j].append(self.clause_index)
                         self.clause_index += 1
         self.clauses_groups[5] += clause
-        self.clause_names['5b'] = clause
+        self.clause_names['5c'] = clause
         return clause
 
     def initiate_clauses(self):        

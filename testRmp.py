@@ -9,7 +9,7 @@ import random
 J = 3
 N = 4
 H = 1
-rounded = False
+rounded = True
 comparaison_list = generate_RMP_learning_set(J, N, H, rounded)
 print("comparaison_list", comparaison_list, "\n")
 sat_rmp = SatRmp(comparaison_list, J, H, N)
@@ -19,10 +19,15 @@ sat_rmp.create_RMP_model()
 # add the contrastive comparison to the learning set and look for an unsat model
 unsat_model_found = False
 while not unsat_model_found:
-    if rounded:
-        x, y = [ round(random.random(), 1) for i in range(N)], [round(random.random(), 1) for i in range(N)]
-    else:
-        x, y = [ random.random() for i in range(N)], [random.random() for i in range(N)]
+    def generate_comparison(rounded):
+        if rounded:
+            x, y = [ round(random.random(), 2) for i in range(N)], [round(random.random(), 2) for i in range(N)]
+        else:
+            x, y = [ random.random() for i in range(N)], [random.random() for i in range(N)]
+        return x,y
+    x,y = generate_comparison(rounded)
+    while test_trivial_contrastive_comparison((x,y)) or test_trivial_contrastive_comparison((y,x)):
+        x,y = generate_comparison(rounded)
     comparison = sat_rmp.RMP_model.compare(x, y)
     comparison_added = False
     if not comparison[1]:
@@ -37,6 +42,7 @@ while not unsat_model_found:
     if comparison_added:
         contrastive_sat_rmp = SatRmp(contrastive_comparaison_list, J + 1, H, N)
         contrastive_sat_rmp.run_SAT()
+        print(contrastive_sat_rmp.clause_names['1'])
         try:
             contrastive_sat_rmp.create_RMP_model()
         except AssertionError:
