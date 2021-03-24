@@ -33,6 +33,7 @@ class SatRmp:
         self.comparaison_to_clause = {j: [] for j in range(self.J)}
         self.clause_index = 0
         self.clauses_groups = dict( [ (i, []) for i in range(6)])
+        self.clauses_names =  dict( [ (i, []) for i in range(6)])
         self.reset()
 
     def reset(self):

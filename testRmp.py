@@ -55,7 +55,6 @@ while not done:
             contrastive_sat_rmp.to_cnf_file("Logs/clauses_{}.cnf".format(iteration_number))
             contrastive_sat_rmp.to_gcnf_file("Logs/clauses_{}.gcnf".format(iteration_number))
             marco_mus_solver("Logs/clauses_{}.cnf".format(iteration_number), "Logs/output_MARCO_{}.txt".format(iteration_number))
-
             wcnf = WCNF()
             for i in range(len(contrastive_sat_rmp.clauses)):
                 if i in contrastive_sat_rmp.comparaison_to_clause[J]:
