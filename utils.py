@@ -136,6 +136,6 @@ def marco_mus_solver(intput_cnf, output_file):
 def write_target_logs(iteration_number, target_muses):
     with open('logs/target_muses_' + str(iteration_number) + '.txt', 'w') as file:
                 for mus, mus_stat in target_muses:
-                    file.write(mus + '\n')
-                    file.write(mus_stat + '\n')
+                    file.write(str(mus) + '\n')
+                    file.write(str(mus_stat) + '\n')
                     file.write('\n')
