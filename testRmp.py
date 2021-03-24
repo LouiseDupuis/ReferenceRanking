@@ -1,7 +1,7 @@
 from pysat.examples.musx import MUSX
 from pysat.formula import WCNF, CNF
 from SatRmp import SatRmp
-from utils import generate_random_RMP_learning_set, generate_RMP_learning_set
+from utils import generate_random_RMP_learning_set, generate_RMP_learning_set, marco_mus_solver
 import random
 
 J = 3
@@ -39,13 +39,6 @@ while not done:
     if comparison_added:
         contrastive_sat_rmp = SatRmp(contrastive_comparaison_list, J + 1, H, N)
 
-        iteration_number = 0
-        with open("Logs/iteration_number.txt", "w+") as file:
-            iteration_number = int(file.read()) + 1
-            file.seek(0)
-            file.write(str(iteration_number))
-            file.truncate()
-
         contrastive_sat_rmp.run_SAT()
         try:
             contrastive_sat_rmp.create_RMP_model()
@@ -53,10 +46,16 @@ while not done:
             done = True
             print('UNSAT')
             print("Contrastive comparison : ", contrastive_comparison)
+            iteration_number = 0
+            with open("Logs/iteration_number.txt", "r+") as file:
+                iteration_number = int(file.read()) + 1
+                file.seek(0)
+                file.write(str(iteration_number))
+                file.truncate()
             contrastive_sat_rmp.to_cnf_file("Logs/clauses_{}.cnf".format(iteration_number))
             contrastive_sat_rmp.to_gcnf_file("Logs/clauses_{}.gcnf".format(iteration_number))
-            marco_mus_solver("Logs/clauses_{}.cnf".format(iteration_number), "Logs/output_MARCO_{}.txt".format(iteration_number)):
-            
+            marco_mus_solver("Logs/clauses_{}.cnf".format(iteration_number), "Logs/output_MARCO_{}.txt".format(iteration_number))
+
             wcnf = WCNF()
             for i in range(len(contrastive_sat_rmp.clauses)):
                 if i in contrastive_sat_rmp.comparaison_to_clause[J]:
