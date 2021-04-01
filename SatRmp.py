@@ -406,3 +406,9 @@ class SatRmp:
                     line += str(el) + ' '
                 line += "0\n"
                 file.write(line)
+    
+    def clause_to_index(self, clause):
+        # takes a clause as input and returns its index in the clauses list (useful for interpreting MARCO's output)
+        if clause not in self.clauses:
+            raise(Exception("This clause is not part of this SATRMP Model"))
+        return self.clauses.index(clause)

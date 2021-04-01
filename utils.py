@@ -65,7 +65,7 @@ def generate_RMP_learning_set(J, N, H, rounded=True):
     return result
 
 
-def generate_marco_mus_list(contrastive_sat_rmp):
+def generate_marco_mus_list(contrastive_sat_rmp, timeout = 5):
     iteration_number = 0
     with open("Logs/iteration_number.txt", "r+") as file:
         iteration_number = int(file.read()) + 1
@@ -74,7 +74,7 @@ def generate_marco_mus_list(contrastive_sat_rmp):
         file.truncate()
     contrastive_sat_rmp.to_cnf_file("Logs/clauses_{}.cnf".format(iteration_number))
     contrastive_sat_rmp.to_gcnf_file("Logs/clauses_{}.gcnf".format(iteration_number))
-    marco_mus_solver("Logs/clauses_{}.cnf".format(iteration_number), "Logs/output_MARCO_{}.txt".format(iteration_number))
+    marco_mus_solver("Logs/clauses_{}.cnf".format(iteration_number), "Logs/output_MARCO_{}.txt".format(iteration_number), timeout)
     marco_mus_list = read_marco_output("Logs/output_MARCO_{}.txt".format(iteration_number))  
     return marco_mus_list, iteration_number
 
@@ -104,6 +104,7 @@ def read_marco_output(path):
 
 def target_mus_lookup(contrastive_sat_rmp, marco_mus_list, J):
     target_muses = []
+    contrastive_muses_stats = []
     for mus in marco_mus_list:
         mus_stats = dict()
         mus_stats['struct_number'] = 0
@@ -112,21 +113,34 @@ def target_mus_lookup(contrastive_sat_rmp, marco_mus_list, J):
             mus_stats[name] = []
         mus_comparisons = set()
         for clause in mus:
-            clause = int(clause)
+            clause = int(clause) -1 # MARCO outputs the index of the clause with 1-based counting
+
+            # getting the explicit description of the clause, not just the index :
+            explicit_clause = contrastive_sat_rmp.clauses[clause]
+
             if clause < contrastive_sat_rmp.structure_clauses_index:
                 mus_stats['struct_number'] += 1
                 for name, clauses in contrastive_sat_rmp.clause_names.items():
-                    if clause in clauses:
+                    if explicit_clause in clauses:
                         mus_stats[name].append(clause)
             else:
-                for j in contrastive_sat_rmp.comparaison_to_clause:
-                    if clause in contrastive_sat_rmp.comparaison_to_clause[j]:
+                for j, clauses in contrastive_sat_rmp.comparaison_to_clause.items():
+                    if clause in clauses:
                         mus_comparisons.add(j)
         mus_stats['comparison'] = list(mus_comparisons)
-        if len(mus_stats['comparison']) == 2 and (J in mus_stats['comparison']):
+        # If we find Muses with the right structure, we output them 
+        if len(mus_stats['comparison']) == 2 and (J in mus_stats['comparison']): 
             explicit_comparisons = [contrastive_sat_rmp.comparaison_list[j] for j in mus_comparisons]
             target_muses.append((mus, mus_stats, explicit_comparisons))
+        if J in mus_stats['comparison']:
+            explicit_comparisons = [contrastive_sat_rmp.comparaison_list[j] for j in mus_comparisons]
+            contrastive_muses_stats += [(mus, mus_stats, explicit_comparisons)]
     
+    # we also print the best muses in cases there are no Muses with the perfect structure
+    # we look for Muses with the least amount of clauses and comparisons, which also contains the contrastive comparison
+    ordered_muses = sorted(contrastive_muses_stats, key = lambda mus, stats, comp : (len(stats['comparison']) + stats['struct_number']) , reverse = True)
+    target_muses.append(ordered_muses)
+
     return target_muses
 
 def test_trivial_contrastive_comparison(contrastive_comparison):
@@ -138,8 +152,9 @@ def test_trivial_contrastive_comparison(contrastive_comparison):
 
 
 
-def marco_mus_solver(intput_cnf, output_file):
-    os.system("timeout 15m python3 MARCO/marco.py " + str(intput_cnf + " -v >" + str(output_file)))
+def marco_mus_solver(intput_cnf, output_file, timeout = 5):
+    # timeout is a number of minutes fot the timeout of the output (otherwise > 30 minutes)
+    os.system("timeout " + str(timeout) + "m python3 MARCO/marco.py " + str(intput_cnf + " -v >" + str(output_file)))
 
 
 def write_target_logs(iteration_number, target_muses):
