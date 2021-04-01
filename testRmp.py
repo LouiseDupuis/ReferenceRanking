@@ -15,6 +15,7 @@ if __name__ == "__main__":
     parser.add_argument('--N', dest='N', default=4, type = int, help='Number of criterions in the model')
     parser.add_argument('--H', dest='H', default=1, type = int, help='Number of reference points in the model')
     parser.add_argument('--timeout', dest='timeout', default=5, type = int, help='Timeout for the MARCO output')
+    parser.add_argument('--all_mus', dest='all_mus', default=False, type = bool, help='Whether or not to output all muses including the contrastive comparison')
 
     args = parser.parse_args()
 
@@ -57,7 +58,6 @@ if __name__ == "__main__":
         if comparison_added:
             contrastive_sat_rmp = SatRmp(contrastive_comparaison_list, J + 1, H, N)
             contrastive_sat_rmp.run_SAT()
-            print(contrastive_sat_rmp.clause_names['1'])
             try:
                 contrastive_sat_rmp.create_RMP_model()
             except AssertionError:
@@ -69,5 +69,5 @@ if __name__ == "__main__":
                 # create a mus with musx solver
                 mus = generate_musx_mus(contrastive_sat_rmp, J)
                 # look for mus with 2 comparisons in marco mus list
-                target_muses = target_mus_lookup(contrastive_sat_rmp, marco_mus_list, J)
+                target_muses = target_mus_lookup(contrastive_sat_rmp, marco_mus_list, J, args.all_mus)
                 write_target_logs(iteration_number, target_muses)

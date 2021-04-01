@@ -102,9 +102,9 @@ def read_marco_output(path):
     return mus_list
 
 
-def target_mus_lookup(contrastive_sat_rmp, marco_mus_list, J):
+def target_mus_lookup(contrastive_sat_rmp, marco_mus_list, J, additional_mus = False):
     target_muses = []
-    contrastive_muses_stats = []
+    #contrastive_muses_stats = []
     for mus in marco_mus_list:
         mus_stats = dict()
         mus_stats['struct_number'] = 0
@@ -113,33 +113,36 @@ def target_mus_lookup(contrastive_sat_rmp, marco_mus_list, J):
             mus_stats[name] = []
         mus_comparisons = set()
         for clause in mus:
-            clause = int(clause) -1 # MARCO outputs the index of the clause with 1-based counting
+            clause_index = int(clause) -1 # MARCO outputs the index of the clause with 1-based counting
 
             # getting the explicit description of the clause, not just the index :
-            explicit_clause = contrastive_sat_rmp.clauses[clause]
-
-            if clause < contrastive_sat_rmp.structure_clauses_index:
+            explicit_clause = contrastive_sat_rmp.clauses[clause_index]
+            if clause_index < contrastive_sat_rmp.structure_clauses_index:
                 mus_stats['struct_number'] += 1
                 for name, clauses in contrastive_sat_rmp.clause_names.items():
                     if explicit_clause in clauses:
-                        mus_stats[name].append(clause)
+                        mus_stats[name].append(clause_index)
             else:
                 for j, clauses in contrastive_sat_rmp.comparaison_to_clause.items():
-                    if clause in clauses:
+                    if clause_index in clauses:
                         mus_comparisons.add(j)
+        
         mus_stats['comparison'] = list(mus_comparisons)
         # If we find Muses with the right structure, we output them 
         if len(mus_stats['comparison']) == 2 and (J in mus_stats['comparison']): 
             explicit_comparisons = [contrastive_sat_rmp.comparaison_list[j] for j in mus_comparisons]
             target_muses.append((mus, mus_stats, explicit_comparisons))
-        if J in mus_stats['comparison']:
-            explicit_comparisons = [contrastive_sat_rmp.comparaison_list[j] for j in mus_comparisons]
-            contrastive_muses_stats += [(mus, mus_stats, explicit_comparisons)]
+
+        # adding other MUS
+        if additional_mus:
+            if J in mus_stats['comparison']:
+                explicit_comparisons = [contrastive_sat_rmp.comparaison_list[j] for j in mus_comparisons]
+                target_muses.append((mus, mus_stats, explicit_comparisons))
     
     # we also print the best muses in cases there are no Muses with the perfect structure
     # we look for Muses with the least amount of clauses and comparisons, which also contains the contrastive comparison
-    ordered_muses = sorted(contrastive_muses_stats, key = lambda mus, stats, comp : (len(stats['comparison']) + stats['struct_number']) , reverse = True)
-    target_muses.append(ordered_muses)
+    #ordered_muses = sorted(contrastive_muses_stats, key = lambda mus, stats, comp : (len(stats['comparison']) + stats['struct_number']))
+    #target_muses.append(ordered_muses)
 
     return target_muses
 
