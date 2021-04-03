@@ -121,7 +121,7 @@ def target_mus_lookup(contrastive_sat_rmp, marco_mus_list, J, additional_mus = F
                 mus_stats['struct_number'] += 1
                 for name, clauses in contrastive_sat_rmp.clause_names.items():
                     if explicit_clause in clauses:
-                        mus_stats[name].append(get_clause_description(contrastive_sat_rmp, explicit_clause, name))
+                        mus_stats[name].append(get_clause_description(contrastive_sat_rmp, explicit_clause, name, clause_index))
             else:
                 for j, clauses in contrastive_sat_rmp.comparaison_to_clause.items():
                     if clause_index in clauses:
@@ -168,13 +168,14 @@ def write_target_logs(iteration_number, target_muses):
                     file.write(str(explicit_comparisons) + '\n')
                     file.write('\n')
 
-def get_clause_description(rmp_model, clause, clause_name):
+def get_clause_description(rmp_model, clause, clause_name, clause_index):
     if clause_name == '1':
-        i, h , k_prime = rmp_model.X.inverse[clause[0]]
-        i, h , k = rmp_model.X.inverse[clause[1]]
+        i, h , k_prime = rmp_model.X.inverse[abs(int(clause[0]))]
+        i, h , k = rmp_model.X.inverse[abs(int(clause[1]))]
         return {'i': i, 'h': h, 'k': k, 'k_prime': k_prime}
     if clause_name == '3a':
-        A, B = rmp_model.Y.inverse[clause[0]]
+        A, B = rmp_model.Y.inverse[abs(int(clause[0]))]
         return {'A': A, 'B': B}
+    return clause_index
         
 
