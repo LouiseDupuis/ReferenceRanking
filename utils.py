@@ -129,15 +129,16 @@ def target_mus_lookup(contrastive_sat_rmp, marco_mus_list, J, additional_mus = F
         
         mus_stats['comparison'] = list(mus_comparisons)
         # If we find Muses with the right structure, we output them 
+        all_comparisons = [(j, contrastive_sat_rmp.comparaison_list[j]) for j in len(contrastive_sat_rmp.comparaison_list)]
+        parameters = {'J': contrastive_sat_rmp.J, 'H': contrastive_sat_rmp.H, 'N': contrastive_sat_rmp.N}
         if len(mus_stats['comparison']) == 2 and (J in mus_stats['comparison']): 
-            explicit_comparisons = [contrastive_sat_rmp.comparaison_list[j] for j in mus_comparisons]
-            target_muses.append((mus, mus_stats, explicit_comparisons))
-
+            #explicit_comparisons = [contrastive_sat_rmp.comparaison_list[j] for j in mus_comparisons]
+            target_muses.append((mus, mus_stats, all_comparisons, parameters))
         # adding other MUS
         if additional_mus:
-            if J in mus_stats['comparison']:
-                explicit_comparisons = [contrastive_sat_rmp.comparaison_list[j] for j in mus_comparisons]
-                target_muses.append((mus, mus_stats, explicit_comparisons))
+            if J in mus_stats['comparison'] and len(mus_stats['comparison']) > 2:
+                #explicit_comparisons = [contrastive_sat_rmp.comparaison_list[j] for j in mus_comparisons]
+                target_muses.append((mus, mus_stats, all_comparisons, parameters))
     
     # we also print the best muses in cases there are no Muses with the perfect structure
     # we look for Muses with the least amount of clauses and comparisons, which also contains the contrastive comparison
@@ -162,13 +163,25 @@ def marco_mus_solver(intput_cnf, output_file, timeout = 5):
 
 def write_target_logs(iteration_number, target_muses):
     with open('logs/target_muses_' + str(iteration_number) + '.txt', 'w') as file:
-                for mus, mus_stat, explicit_comparisons in target_muses:
-                    file.write(str(mus) + '\n')
-                    file.write(str(mus_stat) + '\n')
-                    file.write(str(explicit_comparisons) + '\n')
+                for count, (mus, mus_stats, all_comparisons, parameters) in enumerate(target_muses):
+                    file.write('============================ MUS {} =========================='.format(count) +'\n')
+                    file.write('MUS: ' + str(mus) + '\n')
+                    file.write('Parameters: ' + str(parameters) + '\n')
+                    for key, value in enumerate(mus_stats):
+                        if key in ['struct_number', 'comparison']:
+                            file.write(str(key) + ': ' + str(value) + '\n')
+                        else:
+                            file.write('clause ' + str(key) + ': \n')
+                            for el in value:
+                                file.write(str(el) + '\n')
+                    file.write('Comparisons: \n')
+                    for comp in all_comparisons:
+                        file.write(str(comp) + '\n')
+                    file.write('==============================================================' +'\n')
                     file.write('\n')
 
 def get_clause_description(rmp_model, clause, clause_name, clause_index):
+    #ToDo: Ajouter le reste des clauses
     if clause_name == '1':
         i, h , k_prime = rmp_model.X.inverse[abs(int(clause[0]))]
         i, h , k = rmp_model.X.inverse[abs(int(clause[1]))]
