@@ -174,7 +174,7 @@ def write_target_logs(iteration_number, target_muses):
                             file.write('clause ' + str(key) + ': \n')
                             for el in value:
                                 file.write(str(el) + '\n')
-                    file.write('Comparisons: \n')
+                    file.write('All Comparisons: \n')
                     for comp in all_comparisons:
                         file.write(str(comp) + '\n')
                     file.write('==============================================================' +'\n')
