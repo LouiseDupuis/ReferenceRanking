@@ -129,7 +129,7 @@ def target_mus_lookup(contrastive_sat_rmp, marco_mus_list, J, additional_mus = F
         
         mus_stats['comparison'] = list(mus_comparisons)
         # If we find Muses with the right structure, we output them 
-        all_comparisons = [(j, contrastive_sat_rmp.comparaison_list[j]) for j in len(contrastive_sat_rmp.comparaison_list)]
+        all_comparisons = [(j, contrastive_sat_rmp.comparaison_list[j]) for j in range(len(contrastive_sat_rmp.comparaison_list))]
         parameters = {'J': contrastive_sat_rmp.J, 'H': contrastive_sat_rmp.H, 'N': contrastive_sat_rmp.N}
         if len(mus_stats['comparison']) == 2 and (J in mus_stats['comparison']): 
             #explicit_comparisons = [contrastive_sat_rmp.comparaison_list[j] for j in mus_comparisons]
