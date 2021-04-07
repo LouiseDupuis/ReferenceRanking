@@ -161,25 +161,24 @@ def marco_mus_solver(intput_cnf, output_file, timeout = 5):
     os.system("timeout " + str(timeout) + "m python3 MARCO/marco.py " + str(intput_cnf + " -v >" + str(output_file)))
 
 
-def write_target_logs(iteration_number, target_muses):
+def write_target_logs(iteration_number, target_muses, contrastive_sat_rmp):
     with open('logs/target_muses_' + str(iteration_number) + '.txt', 'w') as file:
                 for count, (mus, mus_stats, all_comparisons, parameters) in enumerate(target_muses):
                     file.write('============================ MUS {} =========================='.format(count) +'\n')
                     file.write('MUS: ' + str(mus) + '\n')
                     file.write('Parameters: ' + str(parameters) + '\n')
-                    for key, value in enumerate(mus_stats):
-                        if key in ['struct_number', 'comparison']:
-                            file.write(str(key) + ': ' + str(value) + '\n')
-                        else:
-                            file.write('clause ' + str(key) + ': \n')
-                            for el in value:
-                                file.write(str(el) + '\n')
+                    file.write('Nb of structure clauses: ' + str(mus_stats['struct_number']) + '\n')
+                    file.write('Comparaisons included in MUS: ' + str(mus_stats['comparison']) + '\n')
+                    for name in contrastive_sat_rmp.clause_names:
+                        file.write('clause ' + str(name) + ': \n')
+                        for clause in mus_stats[name]:
+                                file.write(str(clause) + '\n')
                     file.write('All Comparisons: \n')
                     for comp in all_comparisons:
                         file.write(str(comp) + '\n')
                     file.write('==============================================================' +'\n')
                     file.write('\n')
-
+                    
 def get_clause_description(rmp_model, clause, clause_name, clause_index):
     #ToDo: Ajouter le reste des clauses
     if clause_name == '1':

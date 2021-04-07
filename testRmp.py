@@ -70,4 +70,4 @@ if __name__ == "__main__":
                 mus = generate_musx_mus(contrastive_sat_rmp, J)
                 # look for mus with 2 comparisons in marco mus list
                 target_muses = target_mus_lookup(contrastive_sat_rmp, marco_mus_list, J, args.all_mus)
-                write_target_logs(iteration_number, target_muses)
+                write_target_logs(iteration_number, target_muses, contrastive_sat_rmp)
